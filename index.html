@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전명구의 AI 작업실</title>
+<meta name="description" content="바이브코딩 플랫폼 · 웹툰 · 영상 작업 모음">
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --line:#e5e7eb; --text:#111827; --sub:#6b7280; --faint:#9ca3af;
+    --platform:#2563eb; --webtoon:#db2777; --video:#ea580c; --accent:#111827;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font:15px/1.55 "Pretendard","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",system-ui,sans-serif;}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* 머리글: 한 줄 */
+  header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .bar{display:flex;align-items:center;gap:14px;height:56px}
+  .brand{font-weight:800;font-size:17px;white-space:nowrap}
+  .brand small{font-weight:500;color:var(--sub);font-size:13px;margin-left:8px}
+  .counts{margin-left:auto;color:var(--sub);font-size:13px;white-space:nowrap}
+  .counts b{color:var(--text)}
+
+  /* 분류 탭 + 검색 */
+  .tools{display:flex;align-items:center;gap:8px;padding:16px 0 14px;flex-wrap:wrap}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--sub)}
+  .tab.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .tab .n{opacity:.7;margin-left:4px;font-size:12px}
+  .search{margin-left:auto;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;width:220px;background:#fff}
+  .search:focus{outline:2px solid #c7d2fe;border-color:#a5b4fc}
+
+  /* 카드 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;padding-bottom:28px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(17,24,39,.08)}
+  .thumb{height:118px;position:relative;display:flex;align-items:center;justify-content:center;color:#fff;font-size:42px;font-weight:800;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .play{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+  .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:#fafafa}
+  .chip.t{color:#fff;border-color:transparent}
+  .chip.internal{color:#92400e;background:#fef3c7;border-color:#fde68a}
+  .chip.auto{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
+  .title{font-weight:700;font-size:16px;line-height:1.35}
+  .desc{color:var(--sub);font-size:13.5px}
+  .todo{color:var(--faint);font-style:italic}
+  .eps{display:flex;flex-direction:column;gap:3px;margin-top:2px}
+  .ep{font-size:13px;color:var(--text);padding:4px 8px;border-radius:8px;background:#fdf2f8;display:block}
+  a.ep:hover{background:#fce7f3}
+  span.ep{color:var(--sub)}
+  .meta{margin-top:auto;padding-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
+  .acts{margin-left:auto;display:flex;gap:6px}
+  .btn{font-size:12.5px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;font-family:inherit}
+  .btn.main{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn:hover{filter:brightness(.95)}
+  .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:50px 0}
+  .note{font-size:12.5px;color:var(--faint);padding-bottom:10px;min-height:1em}
+
+  /* 바닥글: 한 줄 */
+  footer{border-top:1px solid var(--line);background:#fff;font-size:12.5px;color:var(--sub)}
+  footer .wrap{height:40px;display:flex;align-items:center;justify-content:space-between;gap:10px;white-space:nowrap;overflow:hidden}
+
+  /* 영상 창 */
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+  #modal.on{display:flex}
+  #modal .box{width:min(960px,100%);aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+  #modal iframe{width:100%;height:100%;border:0}
+
+  @media (max-width:640px){
+    .brand small,.counts{display:none}
+    .search{width:100%;margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<script>
+/* ==================================================================
+   ▼▼▼ 여기만 고치면 됩니다 ▼▼▼
+   - 작업을 추가하려면 ITEMS 안의 { ... } 덩어리 하나를 복사해서 붙여 넣고 내용만 바꾸세요.
+   - type: 'platform'(플랫폼) / 'webtoon'(웹툰) / 'video'(영상)
+   - status: '운영 중' / '교육용' / '정비 중' / '보관' 등 자유롭게
+   - open: '공개' 또는 '내부용'  (내부용이면 열기 링크를 숨기고 소개만 보여 줍니다)
+   - url이 비어 있으면 카드에 '링크 입력 필요'라고 표시됩니다.
+   ================================================================== */
+const SITE = {
+  title: '전명구의 AI 작업실',
+  subtitle: '바이브코딩 플랫폼 · 웹툰 · 영상 모음',
+  owner: '전명구 · 화성특례시 AI스마트전략실 AI전략팀',
+  updated: '2026.11.25.',
+  // GitHub 저장소 자동 불러오기
+  github: {
+    user: 'tkooya-09',
+    auto: true,                 // false로 바꾸면 아래 ITEMS만 보여 줌
+    topic: '',                  // 'portfolio'라고 적으면 그 꼬리표를 단 저장소만 자동 등록
+    exclude: ['hs-safety-manual', 'tkooya-09.github.io']   // 자동 등록에서 뺄 저장소 이름
+  }
+};
+
+const ITEMS = [
+  // ── 플랫폼 ──  repo에 GitHub 저장소 이름을 적으면 링크·날짜를 자동으로 채우고, 자동 등록 카드와 겹치지 않습니다.
+  { type:'platform', title:'비상근무 관리 플랫폼', desc:'비상근무자 편성과 근무 현황을 한 화면에서 관리', repo:'', url:'', status:'운영 중', open:'공개' },
+  { type:'platform', title:'AI화성 챌린지 심사집계표', desc:'심사위원 점수를 자동으로 집계하는 심사표 (가상 데이터 견본)', repo:'ai-hwaseong-judging', url:'', status:'교육용', open:'공개' },
+  { type:'platform', title:'VIP 실시간 상황관리', desc:'주요 방문 일정의 진행 상황을 실시간으로 공유', repo:'', url:'', status:'운영 중', open:'공개' },
+  { type:'platform', title:'공공데이터 출처 길잡이', desc:'필요한 공공데이터가 어디에 있는지 찾아 주는 길잡이', repo:'', url:'', status:'운영 중', open:'공개' },
+  { type:'platform', title:'계약 업무 플랫폼', desc:'계약 업무 절차를 단계별로 안내', repo:'', url:'', status:'운영 중', open:'공개' },
+  { type:'platform', title:'개인업무 플랫폼', desc:'개인 업무 일정과 기록 관리', repo:'', url:'', status:'정비 중', open:'공개' },
+  { type:'platform', title:'담배소매인 거리검토', desc:'담배소매인 지정 시 업소 간 거리 검토', repo:'', url:'', status:'운영 중', open:'공개' },
+  { type:'platform', title:'게임', desc:'', repo:'', url:'', status:'운영 중', open:'공개' },
+
+  // ── 웹툰 ──  episodes의 url에 각 회차 주소를 넣으면 회차를 눌러 바로 볼 수 있습니다.
+  { type:'webtoon', title:'공무원 생존기', desc:'AI로 그린 공무원 공감 웹툰', url:'', status:'연재 중', open:'공개',
+    episodes:[
+      { no:1, title:'신규 공무원이 들어왔다', url:'' },
+      { no:2, title:'오해', url:'' },
+      { no:3, title:'배신', url:'' },
+      { no:4, title:'출근길', url:'' },
+      { no:5, title:'죽음의 자원순환과', url:'' }
+    ] },
+
+  // ── 영상 ──  youtube에 유튜브 주소를 그대로 붙여 넣으면 썸네일과 재생 창이 자동으로 만들어집니다.
+  { type:'video', title:'AI화성 챌린지 사전 영상', desc:'', youtube:'', status:'', open:'공개' }
+];
+/* ▲▲▲ 여기까지 ▲▲▲ =============================================== */
+</script>
+
+<header>
+  <div class="wrap bar">
+    <div class="brand" id="brand"></div>
+    <div class="counts" id="counts"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tools" id="tools">
+    <button class="tab on" data-t="all">전체</button>
+    <button class="tab" data-t="platform">플랫폼</button>
+    <button class="tab" data-t="webtoon">웹툰</button>
+    <button class="tab" data-t="video">영상</button>
+    <input class="search" id="q" type="search" placeholder="제목·설명 검색">
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="note" id="note"></div>
+</main>
+
+<footer><div class="wrap"><span id="foot"></span><span id="upd"></span></div></footer>
+
+<div id="modal"><div class="box" id="mbox"></div></div>
+
+<script>
+(function(){
+  const TYPE = {
+    platform:{ label:'플랫폼', color:'var(--platform)', grad:'linear-gradient(135deg,#3b82f6,#1e40af)' },
+    webtoon: { label:'웹툰',   color:'var(--webtoon)',  grad:'linear-gradient(135deg,#f472b6,#9d174d)' },
+    video:   { label:'영상',   color:'var(--video)',    grad:'linear-gradient(135deg,#fb923c,#9a3412)' }
+  };
+  const all = ITEMS.map(x => Object.assign({}, x));
+  let tab = 'all', q = '';
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ytId = s => {
+    if (!s) return '';
+    const m = String(s).match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/|live\/)([\w-]{11})/);
+    return m ? m[1] : (/^[\w-]{11}$/.test(s) ? s : '');
+  };
+  const repoUrl = it => it.repo ? `https://github.com/${SITE.github.user}/${it.repo}` : '';
+
+  function card(it){
+    const T = TYPE[it.type] || TYPE.platform;
+    const internal = it.open === '내부용';
+    const yid = it.type === 'video' ? ytId(it.youtube) : '';
+    let thumb;
+    if (yid) thumb = `<img src="https://i.ytimg.com/vi/${yid}/hqdefault.jpg" alt="" loading="lazy"><span class="play" data-yt="${yid}">▶</span>`;
+    else if (it.thumb) thumb = `<img src="${esc(it.thumb)}" alt="" loading="lazy">`;
+    else thumb = esc((it.title || '?').trim().charAt(0));
+
+    const chips = [`<span class="chip t" style="background:${T.color}">${T.label}</span>`];
+    if (it.status) chips.push(`<span class="chip">${esc(it.status)}</span>`);
+    if (internal) chips.push(`<span class="chip internal">내부용</span>`);
+    if (it._auto) chips.push(`<span class="chip auto">GitHub 자동</span>`);
+
+    let eps = '';
+    if (it.episodes && it.episodes.length){
+      eps = '<div class="eps">' + it.episodes.map(e => {
+        const label = `${e.no}화 ${esc(e.title)}`;
+        return (e.url && !internal) ? `<a class="ep" href="${esc(e.url)}" target="_blank" rel="noopener">${label}</a>` : `<span class="ep">${label}</span>`;
+      }).join('') + '</div>';
+    }
+
+    const acts = [];
+    if (yid) acts.push(`<button class="btn main" data-yt="${yid}">재생</button>`);
+    if (it.url && !internal) acts.push(`<a class="btn main" href="${esc(it.url)}" target="_blank" rel="noopener">열기</a>`);
+    if (it.repo && !internal) acts.push(`<a class="btn" href="${esc(repoUrl(it))}" target="_blank" rel="noopener">저장소</a>`);
+    const needLink = !internal && !it.url && !yid && !(it.episodes && it.episodes.some(e => e.url));
+    const left = needLink ? '<span class="todo">링크 입력 필요</span>' : esc(it.date || '');
+
+    return `<article class="card">
+      <div class="thumb" style="background:${T.grad}">${thumb}</div>
+      <div class="body">
+        <div class="chips">${chips.join('')}</div>
+        <div class="title">${esc(it.title)}</div>
+        <div class="desc">${it.desc ? esc(it.desc) : '<span class="todo">설명을 입력해 주세요</span>'}</div>
+        ${eps}
+        <div class="meta">${left}<div class="acts">${acts.join('')}</div></div>
+      </div>
+    </article>`;
+  }
+
+  function render(){
+    const kw = q.trim().toLowerCase();
+    const list = all.filter(it =>
+      (tab === 'all' || it.type === tab) &&
+      (!kw || [it.title, it.desc, it.status, it.repo, ...(it.episodes || []).map(e => e.title)].join(' ').toLowerCase().includes(kw))
+    );
+    $('grid').innerHTML = list.length ? list.map(card).join('') : '<div class="empty">해당하는 작업이 없습니다.</div>';
+
+    const n = t => all.filter(x => x.type === t).length;
+    const epN = all.filter(x => x.type === 'webtoon').reduce((s, x) => s + (x.episodes ? x.episodes.length : 0), 0);
+    $('counts').innerHTML = `플랫폼 <b>${n('platform')}</b> · 웹툰 <b>${n('webtoon')}</b>편 ${epN}화 · 영상 <b>${n('video')}</b>`;
+    document.querySelectorAll('.tab').forEach(b => {
+      const t = b.dataset.t, c = t === 'all' ? all.length : n(t);
+      b.innerHTML = `${{all:'전체',platform:'플랫폼',webtoon:'웹툰',video:'영상'}[t]}<span class="n">${c}</span>`;
+    });
+  }
+
+  async function loadGithub(){
+    const g = SITE.github;
+    if (!g || !g.auto || !g.user) return;
+    const key = 'gh_repos_' + g.user;
+    let repos = null;
+    try { const c = sessionStorage.getItem(key); if (c) repos = JSON.parse(c); } catch (e) {}
+    if (!repos){
+      try {
+        const r = await fetch(`https://api.github.com/users/${encodeURIComponent(g.user)}/repos?per_page=100&sort=pushed`);
+        if (!r.ok) throw new Error(r.status);
+        repos = await r.json();
+        try { sessionStorage.setItem(key, JSON.stringify(repos)); } catch (e) {}
+      } catch (e) {
+        $('note').textContent = 'GitHub 저장소 목록을 불러오지 못해 직접 입력한 목록만 보여 줍니다.';
+        return;
+      }
+    }
+    const ex = new Set((g.exclude || []).map(s => s.toLowerCase()));
+    let added = 0;
+    repos
+      .filter(r => !r.fork && !r.archived && !ex.has(r.name.toLowerCase()) && (!g.topic || (r.topics || []).includes(g.topic)))
+      .forEach(r => {
+        const url = r.homepage || (r.has_pages ? `https://${g.user}.github.io/${r.name}/` : '');
+        const date = (r.pushed_at || '').slice(0, 10).replace(/-/g, '.') + (r.pushed_at ? '.' : '');
+        const hit = all.find(x => x.repo && x.repo.toLowerCase() === r.name.toLowerCase());
+        if (hit){
+          if (!hit.url) hit.url = url;
+          if (!hit.date) hit.date = date;
+        } else {
+          all.push({ type:'platform', title:r.name, desc:r.description || '', repo:r.name, url, date, status:'', open:'공개', _auto:true });
+          added++;
+        }
+      });
+    if (added) $('note').textContent = `GitHub에서 저장소 ${added}개를 자동으로 불러왔습니다. (위쪽 목록의 repo에 저장소 이름을 적으면 한글 제목·설명으로 바뀝니다)`;
+    render();
+  }
+
+  // 영상 재생 창
+  function openVideo(id){
+    $('mbox').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    $('modal').classList.add('on');
+  }
+  function closeVideo(){ $('modal').classList.remove('on'); $('mbox').innerHTML = ''; }
+
+  document.addEventListener('click', e => {
+    const tb = e.target.closest('.tab');
+    if (tb){ tab = tb.dataset.t; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === tb)); render(); return; }
+    const yt = e.target.closest('[data-yt]');
+    if (yt){ openVideo(yt.dataset.yt); return; }
+    if (e.target.id === 'modal') closeVideo();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVideo(); });
+  $('q').addEventListener('input', e => { q = e.target.value; render(); });
+
+  document.title = SITE.title;
+  $('brand').innerHTML = `${esc(SITE.title)}<small>${esc(SITE.subtitle)}</small>`;
+  $('foot').textContent = `© ${new Date().getFullYear()} ${SITE.owner}`;
+  $('upd').textContent = `마지막 갱신 ${SITE.updated}`;
+  render();
+  loadGithub();
+})();
+</script>
+</body>
+</html>
