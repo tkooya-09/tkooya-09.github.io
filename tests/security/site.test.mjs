@@ -10,9 +10,9 @@ for(const page of ['index.html','admin.html'])test(page+' blocks inline scripts 
  assert.ok(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html));assert.ok(!/\son\w+=/i.test(html));
  for(const match of html.matchAll(/(?:src|href)="(assets\/app\/[^"#]+)"/g))assert.ok((await read(match[1])).length>0);
 });
-test('homepage publishes only a curated list and retains eight local songs',async()=>{
+test('homepage publishes only a curated list and retains nine local songs',async()=>{
  const js=await read('assets/app/site.js');
- assert.ok(!js.includes('api.github.com/users/'));assert.equal((js.match(/"audio":/g)||[]).length,8);
+ assert.ok(!js.includes('api.github.com/users/'));assert.equal((js.match(/"audio":/g)||[]).length,9);
  for(const match of js.matchAll(/"audio": "([^"]+)"/g))assert.ok((await readFile(new URL('../../'+match[1],import.meta.url))).length>0);
  assert.ok(js.includes("$('song-lyrics').textContent = song.lyrics"));
 });
