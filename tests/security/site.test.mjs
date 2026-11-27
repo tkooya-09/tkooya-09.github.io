@@ -20,6 +20,6 @@ test('admin does not persist credentials or render server strings as HTML',async
  const js=await read('assets/app/admin.js');
  assert.ok(!/(localStorage|sessionStorage)\s*\./.test(js));assert.ok(!/\.innerHTML\s*=/.test(js));
  assert.ok(js.includes('epoch!==generation'));assert.ok(js.includes('studio_admin_moderate'));
- const sql=await read('supabase/changes/admin_login.sql');
- assert.ok(!sql.includes('raw_user_meta_data'));assert.ok(sql.includes("s.id::text=auth.jwt()->>'session_id'"));
+ const sql=await read('supabase/changes/password_admin.sql');
+ assert.ok(!sql.includes('raw_user_meta_data'));assert.ok(sql.includes("extensions.digest(session_token,'sha256')"));assert.ok(sql.includes("last_seen_at>now()-interval '10 minutes'"));
 });

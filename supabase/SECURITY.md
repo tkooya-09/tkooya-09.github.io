@@ -43,3 +43,14 @@ Removed real-name occurrences and employer/department text from the homepage and
 This change does not erase prior Git history, search caches, linked third-party sites, or personally identifying information embedded in the creative works themselves. Those require a separate publication/retention decision. This review covers this homepage repository and its guestbook/challenge administration, not a full security certification of every linked platform.
 
 Public Git commit metadata also contains the owner's real-name/email attribution. Homepage redaction does not remove that metadata. Configure GitHub's private commit email for future commits; rewriting published history is outside this change and was not performed.
+
+
+## Current authentication mode (owner-requested password-only login)
+
+This section supersedes the account-registration flow above. The owner selected password-only administration. `changes/password_admin.sql` stores only a separately provisioned bcrypt cost-12 password hash in the private credential table. `studio_password_login` issues 256-bit random opaque tokens; only SHA-256 token digests are stored in a private RLS-enabled table. Login budgets are five attempts/minute and 30/hour globally, including failures. These global limits can temporarily lock out the owner during abuse.
+
+`studio_password_admin` locks and verifies the token row before every read/mutation. Sessions expire after ten idle minutes or thirty minutes total; logout deletes the token digest. Authentication tokens stay in tab memory, never local/session storage or URLs. Only fixed read/edit/moderate/logout actions are accepted, with length limits and private audit records. Browser tokens are never trusted as administrator flags.
+
+The earlier author-password update/delete RPCs, account-claim RPC and old admin RPCs no longer have PUBLIC, anon or authenticated execute grants. Public browsing, music playback and new guestbook submissions remain available. The legacy Auth-account setup is closed without creating any Auth account or sending any account email. No public user-provisioning endpoint was deployed. The earlier bootstrap password file is superseded by the owner's selected password.
+
+Transactional tests exercised valid/invalid credentials, token forgery, hidden-note exclusion, edits/restoration, logout, idle/absolute expiration, guessing budgets and old-path revocation. Fixtures were rolled back. The source tree contains no selected password or password hash.
