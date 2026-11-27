@@ -67,17 +67,6 @@ const ITEMS = [
     "tag": "교육용 · 샘플"
   },
   {
-    "id": "vip",
-    "type": "platform",
-    "title": "VIP 실시간 상황관리",
-    "desc": "MARS 2026 개막식 내빈 운영과 주요 방문 일정의 진행 상황을 공유합니다.",
-    "repo": "hs-AI-envnt",
-    "url": "https://hs-ai-envnt.vercel.app",
-    "mark": "MARS",
-    "color": "navy",
-    "tag": "행사 운영"
-  },
-  {
     "id": "data",
     "type": "platform",
     "title": "공공데이터 출처 길잡이",
