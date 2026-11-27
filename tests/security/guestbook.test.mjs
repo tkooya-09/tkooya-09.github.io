@@ -15,6 +15,24 @@ test('invalid origin, malformed visitor, payload size and media type are rejecte
  assert.equal((await handler(request({action:'visit',visitor},{'Content-Type':'text/plain'}))).status,415);
  assert.equal(calls,0);
 });
+
+test('view actions forward only the work ID, visitor and server-derived actor',async()=>{
+ let sent;
+ globalThis.fetch=async(url,opts)=>{sent={url,body:JSON.parse(opts.body)};return new Response(JSON.stringify({today:1,total:3,notes:[],views:{contract:1}}));};
+ const r=await handler(request({action:'view',visitor,work:'contract',count:999,actor:'browser-supplied'}));
+ assert.equal(r.status,200);
+ assert.ok(sent.url.endsWith('/rpc/studio_work_view_secure'));
+ assert.deepEqual(Object.keys(sent.body).sort(),['actor','visitor','work']);
+ assert.equal(sent.body.work,'contract');assert.equal(sent.body.visitor,visitor);
+ assert.match(sent.body.actor,/^[a-f0-9]{64}$/);
+});
+test('malformed view IDs never reach the database',async()=>{
+ let calls=0;globalThis.fetch=async()=>{calls++;throw Error('must not call')};
+ for(const work of [null,'','../contract','x'.repeat(65),123]){
+  assert.equal((await handler(request({action:'view',visitor,work}))).status,400);
+ }
+ assert.equal(calls,0);
+});
 test('server subject ignores browser UUID and forwarded-for and changes by managed client IP',async()=>{
  const a=await networkSubject(request({visitor},{'cf-connecting-ip':'203.0.113.10','x-forwarded-for':'1.1.1.1'}),'secret');
  const b=await networkSubject(request({visitor:'different'},{'cf-connecting-ip':'203.0.113.10','x-forwarded-for':'2.2.2.2'}),'secret');

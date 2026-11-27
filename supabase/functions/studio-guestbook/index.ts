@@ -60,9 +60,13 @@ export async function handler(req) {
       if(!(req.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')) return reply({},415);
       const body=await readLimited(req);
       if(!body || typeof body!=='object' || Array.isArray(body)) return reply({},400);
-      const {action,visitor,nickname,note}=body;
-      if(!['visit','post'].includes(action) || typeof visitor!=='string' || !uuid.test(visitor)) return reply({},400);
+      const {action,visitor,nickname,note,work}=body;
+      if(!['visit','post','view'].includes(action) || typeof visitor!=='string' || !uuid.test(visitor)) return reply({},400);
       args={action,visitor};
+      if(action==='view') {
+        if(typeof work!=='string'||!/^[a-z0-9-]{1,64}$/.test(work)) return reply({},400);
+        args.work=work;
+      }
       if(action==='post') {
         if(typeof nickname!=='string'||typeof note!=='string'||!nickname.trim()||!note.trim()||nickname.length>16||note.length>160) return reply({},400);
         Object.assign(args,{nickname:nickname.trim(),note:note.trim()});
@@ -74,9 +78,12 @@ export async function handler(req) {
     const base=Deno.env.get('SUPABASE_URL');
     if(!secret||!base) return reply({},503);
     const actor=await networkSubject(req,secret);
-    const response=await fetch(base+'/rest/v1/rpc/studio_guest_activity_secure',{
+    const isView=args.action==='view';
+    const rpc=isView?'studio_work_view_secure':'studio_guest_activity_secure';
+    const payload=isView?{actor,visitor:args.visitor,work:args.work}:{...args,actor};
+    const response=await fetch(base+'/rest/v1/rpc/'+rpc,{
       method:'POST',headers:{apikey:secret,Authorization:'Bearer '+secret,'Content-Type':'application/json'},
-      body:JSON.stringify({...args,actor}),signal:AbortSignal.timeout(8000)
+      body:JSON.stringify(payload),signal:AbortSignal.timeout(8000)
     });
     if(!response.ok) return reply({},503);
     const result=await response.json();

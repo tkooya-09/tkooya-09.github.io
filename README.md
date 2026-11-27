@@ -25,3 +25,11 @@ node --test tests/security/*.test.mjs
 `tests/security/admin-auth.sql`은 관리자 DB 변경과 함께 트랜잭션 안에서 실행하고 반드시 롤백하는 검증용입니다. 운영 계정을 만들지 않습니다. GitHub Actions의 `Security checks`가 프런트엔드·방명록 검사를 수행합니다.
 
 변경 이력과 제한 사항은 `supabase/SECURITY.md`를 참고하세요.
+
+## Visitor and work popularity counts
+
+The homepage defaults to `조회수순`. Work views count service-link opens and successful audio playback, once per browser/work/day in Asia/Seoul. Repository-link clicks are excluded. Ties keep the curated order, and failed metric requests leave the catalog usable with unavailable counts rather than invented zeroes. These are this studio’s interactions, not Naver or YouTube view totals.
+
+`studio_visitors.work_totals` holds registered work IDs and aggregates. To add a new tracked work, register its ID in that table as well as in `ITEMS`. `work_daily_views` stores temporary daily deduplication tokens; browser roles cannot access these tables or call the counting RPC directly. Existing daily visitor totals remain intact. The Edge Function accepts only bounded work IDs and obtains its rate-limit subject server-side.
+
+Verification: `node --test tests/security/*.test.mjs`; run `tests/security/work-views.sql` as an administrator for transactional, rolled-back counting checks.

@@ -255,9 +255,60 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeURL=s=>{try{const u=new URL(s);return u.protocol==='https:'?u.href:''}catch{return ''}};
 let favorites=new Set();try{const data=JSON.parse(localStorage.getItem('mk-studio-favorites')||'[]');if(Array.isArray(data))favorites=new Set(data.filter(x=>typeof x==='string'))}catch{}
+
+const STUDIO_ENDPOINT='https://sbnjodqxvwgqgdnzcziz.supabase.co/functions/v1/studio-guestbook';
+let viewCounts=Object.create(null), viewsReady=false, activeVisitor=null;
+const trackedViews=new Set(), pendingViews=new Set();
+function visitorIdentity(){
+ const key='studio-visit-'+new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+ if(activeVisitor?.key===key)return activeVisitor;
+ let visitor=crypto.randomUUID();
+ try {
+  const previous=JSON.parse(localStorage.getItem('studio-visitor')||'null');
+  if(previous?.key===key && typeof previous.visitor==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(previous.visitor))visitor=previous.visitor;
+  localStorage.setItem('studio-visitor',JSON.stringify({key,visitor}));
+ } catch {}
+ activeVisitor={key,visitor};
+ return activeVisitor;
+}
+function displayCount(n){return Number.isSafeInteger(n)&&n>=0?n.toLocaleString('ko-KR'):'—'}
+function applyMetrics(data,reorder=false){
+ if(Number.isSafeInteger(data.today)&&Number.isSafeInteger(data.total)){
+  $('visit-today').textContent=displayCount(data.today);
+  $('visit-total').textContent=displayCount(data.total);
+  $('visit-count').textContent='오늘 방문 '+displayCount(data.today)+' · 누적 방문 '+displayCount(data.total);
+  $('visit-summary-note').textContent='같은 브라우저의 방문은 하루 한 번 집계합니다.';
+ }
+ if(!data.views||typeof data.views!=='object'||Array.isArray(data.views))return;
+ for(const item of ITEMS){
+  const value=data.views[item.id];
+  if(Number.isSafeInteger(value)&&value>=0)viewCounts[item.id]=Math.max(viewCounts[item.id]||0,value);
+ }
+ viewsReady=true;
+ if(reorder)render();
+ else document.querySelectorAll('[data-view-count]').forEach(el=>{
+  el.textContent='조회 '+displayCount(viewCounts[el.dataset.viewCount]||0);
+ });
+}
+async function trackWorkView(id){
+ if(!ITEMS.some(item=>item.id===id))return;
+ const identity=visitorIdentity(),key=identity.key+':'+id;
+ if(trackedViews.has(key)||pendingViews.has(key))return;
+ pendingViews.add(key);
+ try {
+  const res=await fetch(STUDIO_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'view',visitor:identity.visitor,work:id}),keepalive:true,signal:AbortSignal.timeout(10000)});
+  if(!res.ok)return;
+  const data=await res.json();
+  if(data.error)return;
+  trackedViews.add(key);
+  // Update numbers without moving the card currently being opened.
+  applyMetrics(data);
+ } catch {} finally {pendingViews.delete(key)}
+}
+
 let current=location.hash==='#guestbook'?'guestbook':'all';let timer;
 function notify(s){$('notice').textContent=s;clearTimeout(timer);timer=setTimeout(()=>$('notice').textContent='',3500)}
-function card(it){const url=safeURL(it.url),repo=it.repo?'https://github.com/tkooya-09/'+encodeURIComponent(it.repo):'';return `<article class="card"><div class="cover ${esc(it.color||'blue')}"><div class="cover-word" aria-hidden="true"><small>${it.type==='platform'?'CREATIVE TOOLS':it.type==='webtoon'?'VISUAL STORIES':it.type==='music'?'ORIGINAL MUSIC':'MOTION & STORY'}</small>${esc(it.mark||'PROJECT')}</div><div class="mini" aria-hidden="true"><i></i><i></i><i></i></div><button class="fav" data-fav="${esc(it.id)}" aria-label="${esc(it.title)} 즐겨찾기" aria-pressed="${favorites.has(it.id)}">${favorites.has(it.id)?'★':'☆'}</button></div><div class="card-body"><div class="tags"><span class="pill">${labels[it.type]}</span><span class="tag">${esc(it.tag||'프로젝트')}</span></div><h3>${it.audio ? `<button type="button" class="song-select" data-song="${esc(it.id)}" aria-label="${esc(it.title)} 재생 및 가사 보기"><span>${esc(it.title)}</span><span class="song-play" aria-hidden="true">▶ 재생 · 가사</span></button>` : esc(it.title)}</h3><p class="desc">${esc(it.desc)}</p>${it.episodes?`<details><summary>등록된 회차 ${it.episodes.length}편</summary><ol>${it.episodes.map(e=>`<li>${esc(e)}</li>`).join('')}</ol><p>회차별 공개 주소 연결 준비 중</p></details>`:''}<div class="actions">${it.audio?'':url?`<a class="action" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} 새 창에서 열기">${it.type==='video'?'영상 보기':it.type==='webtoon'?'작품 보기':'바로 열기'}</a>`:`<span class="pending">${repo?'배포 주소 미등록':'공개 링크 준비 중'}</span>`}${repo?`<a class="source" href="${esc(repo)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} GitHub 저장소">GitHub</a>`:''}</div></div></article>`}
+function card(it){const url=safeURL(it.url),repo=it.repo?'https://github.com/tkooya-09/'+encodeURIComponent(it.repo):'';return `<article class="card" data-work-card="${esc(it.id)}"><div class="cover ${esc(it.color||'blue')}"><div class="cover-word" aria-hidden="true"><small>${it.type==='platform'?'CREATIVE TOOLS':it.type==='webtoon'?'VISUAL STORIES':it.type==='music'?'ORIGINAL MUSIC':'MOTION & STORY'}</small>${esc(it.mark||'PROJECT')}</div><div class="mini" aria-hidden="true"><i></i><i></i><i></i></div><button class="fav" data-fav="${esc(it.id)}" aria-label="${esc(it.title)} 즐겨찾기" aria-pressed="${favorites.has(it.id)}">${favorites.has(it.id)?'★':'☆'}</button></div><div class="card-body"><div class="tags"><span class="pill">${labels[it.type]}</span><span class="tag">${esc(it.tag||'프로젝트')}</span><span class="view-count" data-view-count="${esc(it.id)}" title="작업실에서 열기·재생한 횟수, 같은 브라우저는 작품별 하루 1회">조회 ${viewsReady?displayCount(viewCounts[it.id]||0):'—'}</span></div><h3>${it.audio ? `<button type="button" class="song-select" data-song="${esc(it.id)}" aria-label="${esc(it.title)} 재생 및 가사 보기"><span>${esc(it.title)}</span><span class="song-play" aria-hidden="true">▶ 재생 · 가사</span></button>` : esc(it.title)}</h3><p class="desc">${esc(it.desc)}</p>${it.episodes?`<details><summary>등록된 회차 ${it.episodes.length}편</summary><ol>${it.episodes.map(e=>`<li>${esc(e)}</li>`).join('')}</ol><p>회차별 공개 주소 연결 준비 중</p></details>`:''}<div class="actions">${it.audio?'':url?`<a class="action" data-work="${esc(it.id)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} 새 창에서 열기">${it.type==='video'?'영상 보기':it.type==='webtoon'?'작품 보기':'바로 열기'}</a>`:`<span class="pending">${repo?'배포 주소 미등록':'공개 링크 준비 중'}</span>`}${repo?`<a class="source" href="${esc(repo)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} GitHub 저장소">GitHub</a>`:''}</div></div></article>`}
 function render(){
 const isGuestbook=current==='guestbook';
 $('guestbook').hidden=!isGuestbook;
@@ -269,7 +320,7 @@ document.querySelectorAll('.nav a[href="#collection"],.nav a[href="#guestbook"]'
 if((link.hash==='#guestbook')===isGuestbook)link.setAttribute('aria-current','page');
 else link.removeAttribute('aria-current');
 });
-const q=$('search').value.trim().toLowerCase();let list=ITEMS.filter(it=>(current==='all'||current==='favorites'&&favorites.has(it.id)||it.type===current)&&[it.title,it.desc,it.repo,it.tag,...(it.episodes||[])].join(' ').toLowerCase().includes(q));if($('sort').value==='title')list.sort((a,b)=>a.title.localeCompare(b.title,'ko'));if($('sort').value==='linked')list.sort((a,b)=>Number(!!b.url)-Number(!!a.url));$('grid').innerHTML=list.length?list.map(card).join(''):`<div class="empty"><strong>${current==='favorites'?'아직 저장한 작품이 없습니다':'검색 결과가 없습니다'}</strong><p>${current==='favorites'?'작품 카드의 별을 눌러 자주 찾는 작품을 모아보세요.':'다른 검색어나 분류로 다시 찾아보세요.'}</p><button id="reset">전체 작품 보기</button></div>`;$('results').textContent=q ? `검색 결과 ${list.length}개` : current==='favorites' ? '이 브라우저에 저장한 작품입니다.' : '';const counts=Object.fromEntries(Object.keys(labels).map(type=>[type,type==='all'?ITEMS.length:type==='favorites'?ITEMS.filter(item=>favorites.has(item.id)).length:ITEMS.filter(item=>item.type===type).length]));
+const q=$('search').value.trim().toLowerCase();let list=ITEMS.filter(it=>(current==='all'||current==='favorites'&&favorites.has(it.id)||it.type===current)&&[it.title,it.desc,it.repo,it.tag,...(it.episodes||[])].join(' ').toLowerCase().includes(q));if($('sort').value==='popular')list.sort((a,b)=>(viewCounts[b.id]||0)-(viewCounts[a.id]||0));if($('sort').value==='title')list.sort((a,b)=>a.title.localeCompare(b.title,'ko'));if($('sort').value==='linked')list.sort((a,b)=>Number(!!b.url)-Number(!!a.url));$('grid').innerHTML=list.length?list.map(card).join(''):`<div class="empty"><strong>${current==='favorites'?'아직 저장한 작품이 없습니다':'검색 결과가 없습니다'}</strong><p>${current==='favorites'?'작품 카드의 별을 눌러 자주 찾는 작품을 모아보세요.':'다른 검색어나 분류로 다시 찾아보세요.'}</p><button id="reset">전체 작품 보기</button></div>`;$('results').textContent=q ? `검색 결과 ${list.length}개` : current==='favorites' ? '이 브라우저에 저장한 작품입니다.' : '';const counts=Object.fromEntries(Object.keys(labels).map(type=>[type,type==='all'?ITEMS.length:type==='favorites'?ITEMS.filter(item=>favorites.has(item.id)).length:ITEMS.filter(item=>item.type===type).length]));
 document.querySelectorAll('[data-type]').forEach(b=>{let t=b.dataset.type,n=counts[t];b.innerHTML=labels[t]+(t==='guestbook'?'':`<span class="num">${n}</span>`);b.classList.toggle('on',t===current);b.setAttribute('aria-pressed',String(t===current))})}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-type]');if(t){current=t.dataset.type;history.replaceState(null,'',current==='guestbook'?'#guestbook':'#collection');render()}const f=e.target.closest('[data-fav]');if(f){const id=f.dataset.fav;if(favorites.has(id))favorites.delete(id);else favorites.add(id);try{localStorage.setItem('mk-studio-favorites',JSON.stringify([...favorites]))}catch{notify('저장 공간을 사용할 수 없어 이번 화면에서만 유지됩니다.')}render();document.querySelector(`[data-fav="${CSS.escape(id)}"]`)?.focus()}if(e.target.id==='reset'){current='all';$('search').value='';render();$('search').focus()}});$('search').addEventListener('input',render);$('sort').addEventListener('change',render);
 document.addEventListener('click',event=>{
@@ -286,6 +337,17 @@ window.addEventListener('hashchange',()=>{
 current=location.hash==='#guestbook'?'guestbook':'all';
 render();
 });
+function trackWorkLink(event){
+ const link=event.target.closest('a[data-work]');
+ if(!link||event.defaultPrevented||(event.type==='auxclick'&&event.button!==1))return;
+ void trackWorkView(link.dataset.work);
+}
+document.addEventListener('click',trackWorkLink);
+document.addEventListener('auxclick',trackWorkLink);
+$('audio').addEventListener('playing',()=>{
+ const id=$('audio').dataset.work;
+ if(id)void trackWorkView(id);
+});
 // Only explicitly registered projects are published.
 document.addEventListener('click', async event => {
   const button = event.target.closest('[data-song]');
@@ -297,6 +359,7 @@ document.addEventListener('click', async event => {
   $('song-lyrics').textContent = song.lyrics;
   $('lyrics-panel').open = true;
   $('song-player').scrollIntoView({block: 'start'});
+  player.dataset.work = song.id;
   player.src = song.audio;
   try { await player.play(); }
   catch (error) { if (error.name !== 'AbortError') notify('재생할 수 없습니다. 다시 시도해 주세요.'); }
@@ -306,24 +369,17 @@ render();
 ;
 
 (() => {
- const endpoint='https://sbnjodqxvwgqgdnzcziz.supabase.co/functions/v1/studio-guestbook';
+ const endpoint=STUDIO_ENDPOINT;
  const form=document.getElementById('guest-form');
  const status=document.getElementById('guest-status');
- let visitor=crypto.randomUUID();
- try {
-   const key='studio-visit-'+new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
-   const previous=JSON.parse(localStorage.getItem('studio-visitor')||'null');
-   if(previous?.key===key && typeof previous.visitor==='string') visitor=previous.visitor;
-   localStorage.setItem('studio-visitor',JSON.stringify({key,visitor}));
- } catch {}
  let latest=0;
  async function request(action,fields={}) {
    const sequence=++latest;
-   const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,visitor,...fields}),signal:AbortSignal.timeout(20000)});
+   const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,visitor:visitorIdentity().visitor,...fields}),signal:AbortSignal.timeout(20000)});
    if(!res.ok) throw new Error(res.status===429?'잠시 후 다시 남겨 주세요.':'연결하지 못했어요. 잠시 후 다시 시도해 주세요.');
    const data=await res.json();
    if(sequence!==latest)return;
-   document.getElementById('visit-count').textContent='오늘 방문 '+data.today.toLocaleString('ko-KR')+' · 누적 방문 '+data.total.toLocaleString('ko-KR');
+   applyMetrics(data,true);
    const list=document.getElementById('guest-list');
    list.replaceChildren(...data.notes.map(entry=>{
      const row=document.createElement('li'),name=document.createElement('strong'),time=document.createElement('time'),message=document.createElement('p');
@@ -334,7 +390,10 @@ render();
    status.textContent=action==='post'?'방명록에 남겼어요.':data.notes.length?'':'첫 번째 한마디를 남겨 주세요.';
  }
  const onError=err=>{status.textContent=err.name==='TimeoutError'?'연결이 지연되고 있어요. 다시 시도해 주세요.':err.message;};
- request('visit').catch(onError);
+ request('visit').catch(err=>{
+  onError(err);
+  $('visit-summary-note').textContent='방문 현황을 불러오지 못했습니다. 새로고침하면 다시 확인합니다.';
+ });
  form.addEventListener('submit',async event=>{
    event.preventDefault();
    const button=form.querySelector('button');if(button.disabled)return;
