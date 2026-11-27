@@ -25,3 +25,21 @@ A database transaction lock makes checks and inserts atomic. Daily aggregates pr
 Run `node --test tests/security/guestbook.test.mjs` for endpoint validation, subject derivation, private-data isolation, and error/rate-limit responses. Before deployment, rollback-only SQL tests verified author/admin authorization, private-schema access, public-hash removal, visit idempotency, UUID rotation resistance, network caps, and request caps. Test posts were rolled back.
 
 Scope does not include GitHub branch protection, homepage CSP, account-based admin sign-in, or the separate event/VIP PIN workflow.
+
+## Account-based administration follow-up
+
+`changes/admin_login.sql` adds a private owner allowlist, one-time bootstrap state, audit metadata, and reversible moderation. Authenticated public RPCs call fixed-search-path private helpers; authorization checks a live Auth session (maximum age 30 minutes), confirmed non-anonymous account, and an enabled allowlist entry on every call. User-editable metadata never confers privileges. Revoking the membership or deleting the session takes effect at the next call.
+
+The owner must register and verify an email, sign in at `/admin.html`, and prove possession of the separately delivered bootstrap password. A locked singleton row prevents concurrent claims. Five attempts per minute are allowed. A successful claim deletes the previous shared credential and permanently closes bootstrap. No production account was created during implementation. Until the owner completes setup, the previous strong-password administration remains available to avoid a lockout. Auth email delivery depends on the project's mail provider settings; the live signup/verification flow requires the owner's email and was not exercised with a real address.
+
+The admin dashboard lists the latest 100 notes and challenge posts, supports hiding/restoring both and editing challenge posts, and does not expose visitor tokens, actor hashes or password hashes. Moderator actions retain the data and record only actor/action/record IDs in private audit storage. Direct public challenge SELECT uses RLS to omit hidden posts; the public guestbook snapshot omits hidden notes. Existing author-password edits remain supported. Credential tokens exist only in the administrator tab's memory and are removed on logout/navigation; no refresh token is persisted.
+
+Both HTML pages now use a strict meta CSP without unsafe-inline or unsafe-eval, local scripts/styles, and no-referrer. Meta CSP cannot enforce frame-ancestors; an HTTP header would require hosting that supports configurable response headers. GitHub Actions runs seven checks with a pinned checkout action and read-only repository permissions. Repository branch protection still requires the repository administration setting to be configured separately.
+
+## Public-content privacy review
+
+Removed real-name occurrences and employer/department text from the homepage and README; the public brand remains the established pen name. Disabled automatic publication of new public GitHub repositories. Existing creative works, song lyrics and project titles remain published intentionally. The family webtoon still names the child and age in its description; external webtoon pages and the GitHub account can still identify the author. No telephone or email patterns were found in the reviewed homepage/catalog source. Audio metadata was separately inspected without modifying audio.
+
+This change does not erase prior Git history, search caches, linked third-party sites, or personally identifying information embedded in the creative works themselves. Those require a separate publication/retention decision. This review covers this homepage repository and its guestbook/challenge administration, not a full security certification of every linked platform.
+
+Public Git commit metadata also contains the owner's real-name/email attribution. Homepage redaction does not remove that metadata. Configure GitHub's private commit email for future commits; rewriting published history is outside this change and was not performed.
