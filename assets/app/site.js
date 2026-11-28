@@ -1,6 +1,17 @@
 
 const ITEMS = [
   {
+    "id": "grow-video",
+    "type": "video",
+    "title": "천천히 자라도 돼",
+    "desc": "아이의 속도를 믿고 기다리는 아빠의 마음을 담은 노래입니다.",
+    "mark": "MUSIC VIDEO",
+    "color": "pink",
+    "tag": "유튜브 영상",
+    "poster": "assets/video/grow-youtube.jpg",
+    "url": "https://www.youtube.com/watch?v=4ITV0JHRivg"
+  },
+  {
     "id": "contract",
     "type": "platform",
     "title": "계약 업무 플랫폼",
@@ -233,6 +244,7 @@ const ITEMS = [
   },
   {
     "id": "grow",
+    "youtube": "https://www.youtube.com/watch?v=4ITV0JHRivg",
     "type": "music",
     "title": "천천히 자라도 돼",
     "audio": "assets/music/grow.mp3",
