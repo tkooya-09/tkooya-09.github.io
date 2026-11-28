@@ -141,6 +141,17 @@ const ITEMS = [
     "tag": "SF · 네이버 도전만화"
   },
   {
+    "id": "just-you-video",
+    "type": "video",
+    "title": "바로 너 · 웹툰 뮤직비디오",
+    "desc": "설레는 고백부터 첫 데이트까지. 노래와 웹툰 40컷으로 만나는 3분의 러브스토리.",
+    "mark": "MUSIC VIDEO",
+    "color": "pink",
+    "tag": "3:01 · 웹툰 40컷",
+    "poster": "assets/video/just-you-poster.jpg",
+    "url": "https://tkooya-09.github.io/videos/just-you/"
+  },
+  {
     "id": "video",
     "type": "video",
     "title": "AI화성 챌린지 사전 영상",
@@ -155,6 +166,7 @@ const ITEMS = [
     "type": "music",
     "title": "바로 너",
     "audio": "assets/music/just-you.mp3",
+    "videoPage": "https://tkooya-09.github.io/videos/just-you/",
     "desc": "",
     "mark": "MUSIC",
     "color": "pink",
@@ -306,9 +318,10 @@ async function trackWorkView(id){
  } catch {} finally {pendingViews.delete(key)}
 }
 
-let current=location.hash==='#guestbook'?'guestbook':'all';let timer;
+const hashCategory=()=>location.hash==='#guestbook'?'guestbook':location.hash==='#video'?'video':'all';
+let current=hashCategory();let timer;
 function notify(s){$('notice').textContent=s;clearTimeout(timer);timer=setTimeout(()=>$('notice').textContent='',3500)}
-function card(it){const url=safeURL(it.url),repo=it.repo?'https://github.com/tkooya-09/'+encodeURIComponent(it.repo):'';return `<article class="card" data-work-card="${esc(it.id)}"><div class="cover ${esc(it.color||'blue')}"><div class="cover-word" aria-hidden="true"><small>${it.type==='platform'?'CREATIVE TOOLS':it.type==='webtoon'?'VISUAL STORIES':it.type==='music'?'ORIGINAL MUSIC':'MOTION & STORY'}</small>${esc(it.mark||'PROJECT')}</div><div class="mini" aria-hidden="true"><i></i><i></i><i></i></div><button class="fav" data-fav="${esc(it.id)}" aria-label="${esc(it.title)} 즐겨찾기" aria-pressed="${favorites.has(it.id)}">${favorites.has(it.id)?'★':'☆'}</button></div><div class="card-body"><div class="tags"><span class="pill">${labels[it.type]}</span><span class="tag">${esc(it.tag||'프로젝트')}</span><span class="view-count" data-view-count="${esc(it.id)}" title="작업실에서 열기·재생한 횟수, 같은 브라우저는 작품별 하루 1회">조회 ${viewsReady?displayCount(viewCounts[it.id]||0):'—'}</span></div><h3>${it.audio ? `<button type="button" class="song-select" data-song="${esc(it.id)}" aria-label="${esc(it.title)} 재생 및 가사 보기"><span>${esc(it.title)}</span><span class="song-play" aria-hidden="true">▶ 재생 · 가사</span></button>` : esc(it.title)}</h3><p class="desc">${esc(it.desc)}</p>${it.episodes?`<details><summary>등록된 회차 ${it.episodes.length}편</summary><ol>${it.episodes.map(e=>`<li>${esc(e)}</li>`).join('')}</ol><p>회차별 공개 주소 연결 준비 중</p></details>`:''}<div class="actions">${it.audio?'':url?`<a class="action" data-work="${esc(it.id)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} 새 창에서 열기">${it.type==='video'?'영상 보기':it.type==='webtoon'?'작품 보기':'바로 열기'}</a>`:`<span class="pending">${repo?'배포 주소 미등록':'공개 링크 준비 중'}</span>`}${repo?`<a class="source" href="${esc(repo)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} GitHub 저장소">GitHub</a>`:''}</div></div></article>`}
+function card(it){const url=safeURL(it.url),repo=it.repo?'https://github.com/tkooya-09/'+encodeURIComponent(it.repo):'';return `<article class="card" data-work-card="${esc(it.id)}"><div class="cover ${esc(it.color||'blue')}">${it.poster?`<img class="video-poster" src="${esc(it.poster)}" alt="" loading="lazy" width="1280" height="720">`:""}<div class="cover-word" aria-hidden="true"><small>${it.type==='platform'?'CREATIVE TOOLS':it.type==='webtoon'?'VISUAL STORIES':it.type==='music'?'ORIGINAL MUSIC':'MOTION & STORY'}</small>${esc(it.mark||'PROJECT')}</div><div class="mini" aria-hidden="true"><i></i><i></i><i></i></div><button class="fav" data-fav="${esc(it.id)}" aria-label="${esc(it.title)} 즐겨찾기" aria-pressed="${favorites.has(it.id)}">${favorites.has(it.id)?'★':'☆'}</button></div><div class="card-body"><div class="tags"><span class="pill">${labels[it.type]}</span><span class="tag">${esc(it.tag||'프로젝트')}</span><span class="view-count" data-view-count="${esc(it.id)}" title="작업실에서 열기·재생한 횟수, 같은 브라우저는 작품별 하루 1회">조회 ${viewsReady?displayCount(viewCounts[it.id]||0):'—'}</span></div><h3>${it.audio ? `<button type="button" class="song-select" data-song="${esc(it.id)}" aria-label="${esc(it.title)} 재생 및 가사 보기"><span>${esc(it.title)}</span><span class="song-play" aria-hidden="true">▶ 재생 · 가사</span></button>` : esc(it.title)}</h3><p class="desc">${esc(it.desc)}</p>${it.episodes?`<details><summary>등록된 회차 ${it.episodes.length}편</summary><ol>${it.episodes.map(e=>`<li>${esc(e)}</li>`).join('')}</ol><p>회차별 공개 주소 연결 준비 중</p></details>`:''}<div class="actions">${it.audio?(it.videoPage?`<a class="action" data-work="just-you-video" href="${esc(safeURL(it.videoPage))}">▶ 뮤직비디오 보기</a>`:''):url?`<a class="action" data-work="${esc(it.id)}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} 새 창에서 열기">${it.type==='video'?'영상 보기':it.type==='webtoon'?'작품 보기':'바로 열기'}</a>`:`<span class="pending">${repo?'배포 주소 미등록':'공개 링크 준비 중'}</span>`}${repo?`<a class="source" href="${esc(repo)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(it.title)} GitHub 저장소">GitHub</a>`:''}</div></div></article>`}
 function render(){
 const isGuestbook=current==='guestbook';
 $('guestbook').hidden=!isGuestbook;
@@ -322,7 +335,7 @@ else link.removeAttribute('aria-current');
 });
 const q=$('search').value.trim().toLowerCase();let list=ITEMS.filter(it=>(current==='all'||current==='favorites'&&favorites.has(it.id)||it.type===current)&&[it.title,it.desc,it.repo,it.tag,...(it.episodes||[])].join(' ').toLowerCase().includes(q));if($('sort').value==='popular')list.sort((a,b)=>(viewCounts[b.id]||0)-(viewCounts[a.id]||0));if($('sort').value==='title')list.sort((a,b)=>a.title.localeCompare(b.title,'ko'));if($('sort').value==='linked')list.sort((a,b)=>Number(!!b.url)-Number(!!a.url));$('grid').innerHTML=list.length?list.map(card).join(''):`<div class="empty"><strong>${current==='favorites'?'아직 저장한 작품이 없습니다':'검색 결과가 없습니다'}</strong><p>${current==='favorites'?'작품 카드의 별을 눌러 자주 찾는 작품을 모아보세요.':'다른 검색어나 분류로 다시 찾아보세요.'}</p><button id="reset">전체 작품 보기</button></div>`;$('results').textContent=q ? `검색 결과 ${list.length}개` : current==='favorites' ? '이 브라우저에 저장한 작품입니다.' : '';const counts=Object.fromEntries(Object.keys(labels).map(type=>[type,type==='all'?ITEMS.length:type==='favorites'?ITEMS.filter(item=>favorites.has(item.id)).length:ITEMS.filter(item=>item.type===type).length]));
 document.querySelectorAll('[data-type]').forEach(b=>{let t=b.dataset.type,n=counts[t];b.innerHTML=labels[t]+(t==='guestbook'?'':`<span class="num">${n}</span>`);b.classList.toggle('on',t===current);b.setAttribute('aria-pressed',String(t===current))})}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-type]');if(t){current=t.dataset.type;history.replaceState(null,'',current==='guestbook'?'#guestbook':'#collection');render()}const f=e.target.closest('[data-fav]');if(f){const id=f.dataset.fav;if(favorites.has(id))favorites.delete(id);else favorites.add(id);try{localStorage.setItem('mk-studio-favorites',JSON.stringify([...favorites]))}catch{notify('저장 공간을 사용할 수 없어 이번 화면에서만 유지됩니다.')}render();document.querySelector(`[data-fav="${CSS.escape(id)}"]`)?.focus()}if(e.target.id==='reset'){current='all';$('search').value='';render();$('search').focus()}});$('search').addEventListener('input',render);$('sort').addEventListener('change',render);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-type]');if(t){current=t.dataset.type;history.replaceState(null,'',current==='guestbook'?'#guestbook':current==='video'?'#video':'#collection');render()}const f=e.target.closest('[data-fav]');if(f){const id=f.dataset.fav;if(favorites.has(id))favorites.delete(id);else favorites.add(id);try{localStorage.setItem('mk-studio-favorites',JSON.stringify([...favorites]))}catch{notify('저장 공간을 사용할 수 없어 이번 화면에서만 유지됩니다.')}render();document.querySelector(`[data-fav="${CSS.escape(id)}"]`)?.focus()}if(e.target.id==='reset'){current='all';$('search').value='';render();$('search').focus()}});$('search').addEventListener('input',render);$('sort').addEventListener('change',render);
 document.addEventListener('click',event=>{
 const link=event.target.closest('a[href="#guestbook"],a[href="#collection"]');
 if(!link)return;
@@ -334,7 +347,7 @@ $('collection').scrollIntoView({block:'start'});
 document.querySelector('[data-type="'+current+'"]').focus({preventScroll:true});
 });
 window.addEventListener('hashchange',()=>{
-current=location.hash==='#guestbook'?'guestbook':'all';
+current=hashCategory();
 render();
 });
 function trackWorkLink(event){

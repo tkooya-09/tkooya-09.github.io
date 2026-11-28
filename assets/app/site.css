@@ -110,3 +110,5 @@ img,video,iframe{max-width:100%}
 .ranking-note{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 14px;overflow-wrap:anywhere}
 @media(max-width:680px){.visitor-summary{padding:14px 16px;margin-bottom:16px}.visitor-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;font-size:13px}.visitor-numbers strong{font-size:22px;margin-left:5px}}
 
+
+.cover .video-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cover:has(.video-poster) .cover-word,.cover:has(.video-poster) .mini{visibility:hidden}.cover:has(.video-poster) .fav{z-index:1;background:white}
