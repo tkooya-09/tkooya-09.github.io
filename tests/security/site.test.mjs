@@ -8,7 +8,7 @@ for(const page of ['index.html','admin.html'])test(page+' blocks inline scripts 
  assert.match(csp,/default-src 'none'/);assert.match(csp,/script-src 'self'/);assert.match(csp,/object-src 'none'/);assert.match(csp,/base-uri 'none'/);
  assert.ok(!csp.includes('unsafe-inline'));assert.ok(!csp.includes('unsafe-eval'));
  assert.ok(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html));assert.ok(!/\son\w+=/i.test(html));
- for(const match of html.matchAll(/(?:src|href)="(assets\/app\/[^"#]+)"/g))assert.ok((await read(match[1])).length>0);
+ for(const match of html.matchAll(/(?:src|href)="(assets\/app\/[^"#]+)"/g))assert.ok((await read(match[1].split('?')[0])).length>0);
 });
 test('homepage publishes only a curated list and retains nine local songs',async()=>{
  const js=await read('assets/app/site.js');
