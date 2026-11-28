@@ -112,3 +112,50 @@ img,video,iframe{max-width:100%}
 
 
 .cover .video-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cover:has(.video-poster) .cover-word,.cover:has(.video-poster) .mini{visibility:hidden}.cover:has(.video-poster) .fav{z-index:1;background:white}
+
+
+/* Clear primary actions and comfortable touch targets. */
+:root{--purple:#4f3bd5;--ink:#202136;--line:#d9dce9}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.action{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:50px;padding:12px 20px;border:2px solid var(--purple);border-radius:12px;background:var(--purple);color:#fff;font-size:16px;font-weight:800;line-height:1.45;text-align:center;box-shadow:0 4px 10px #4f3bd524;transition:background .18s,border-color .18s,box-shadow .18s}
+.action:hover{background:#3925b4;border-color:#3925b4;color:#fff;box-shadow:0 6px 16px #4f3bd536}
+.action-secondary{background:#fff;color:#4432bb;border-color:#c1b8ed;box-shadow:none}
+.action-secondary:hover{background:#f0edff;border-color:#8172d6;color:#3925b4;box-shadow:none}
+.actions{gap:10px;align-items:stretch;padding-top:18px;border-top:1px solid #e6e3f2}
+.actions>.action{flex:1 1 100%;width:100%}
+.actions .source{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border:1px solid #c7cbdc;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;color:#4a5068;background:#fff}
+.actions .source:hover{background:#f2f3f8;border-color:#8e95ad}
+.card{border-color:#dfe1ec;border-radius:20px;box-shadow:0 3px 14px #25235305}
+.card:hover{box-shadow:0 12px 30px #25235312}
+.card-body{padding:22px}.card h3{font-size:20px}.desc{font-size:15px}.desc:empty{display:none}
+.catalog-panel{border:1px solid #d9d5ee;box-shadow:0 6px 24px #35257606}
+#collection .tabs{gap:10px;padding-top:18px}
+#collection .tab{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:12px 18px;border:1px solid #cdd0e0;background:#fff;color:#464b64;font-size:15px;font-weight:750;line-height:1.4;border-radius:12px}
+#collection .tab:hover{background:#f0edff;border-color:#9c8fe1;color:#4432bb}
+#collection .tab.on{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 4px 12px #4f3bd52e}
+#collection .tab .num{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 5px;margin-left:7px;border-radius:7px;font-size:12px;background:#eeeff6;opacity:1;color:#535a72}
+#collection .tab.on .num{background:#ffffff26;color:#fff}
+.nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 12px;border-radius:10px}
+.nav a[aria-current="page"]{background:#ece8ff;color:#4432bb}.nav{gap:8px}
+.search,#sort{border-color:#bdc2d4;min-height:48px}.search::placeholder{color:#72788d}
+.fav{width:44px;height:44px;background:#fff;border-color:#c8cadd;box-shadow:0 2px 8px #20213614;color:#535b73}
+.fav[aria-pressed=true]{background:#4f3bd5;color:#fff;border-color:#4f3bd5}
+#song-player:not([hidden]){border:2px solid #bdb2f2;box-shadow:0 6px 24px #4f3bd514;padding:20px;border-radius:16px;scroll-margin-top:16px}
+#song-title{font-size:20px;color:#4432bb}#lyrics-panel summary{min-height:44px;font-size:16px;color:#4432bb}
+#guest-form button{min-height:50px;padding:12px 20px;border:2px solid var(--purple);border-radius:12px;font-size:16px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #36229c;outline-offset:4px}
+button:disabled{cursor:wait;opacity:.65}
+@media(max-width:680px){
+ .hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+ .hero-actions .action{padding:12px 8px;font-size:15px;min-height:50px}
+ .nav a{border:1px solid #cdc6ed;background:#f5f2ff}
+ .nav a[aria-current="page"]{background:var(--purple);border-color:var(--purple);color:white}
+ #collection .tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:16px}
+ #collection .tab{padding:10px 4px;font-size:14px;min-height:50px}
+ #collection .tab .num{margin-left:4px;min-width:20px;height:20px;font-size:11px}
+ #collection .tab[data-type="guestbook"]{grid-column:1/-1}
+ .card-body{padding:20px}.cover{height:158px}.card h3{font-size:20px}
+ .actions>.action{min-height:52px;font-size:16px}.about .action{font-size:15px}
+ #song-player:not([hidden]){padding:16px}
+}
+@media(prefers-reduced-motion:reduce){.action{transition:none}}
