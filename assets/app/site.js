@@ -1,6 +1,17 @@
 
 const ITEMS = [
   {
+    "id": "giving-tree-video",
+    "type": "video",
+    "title": "아낌없이 주는 나무",
+    "desc": "가족에게 전하는 사랑을 담은 노래 영상입니다.",
+    "mark": "MUSIC VIDEO",
+    "color": "pink",
+    "tag": "유튜브 영상",
+    "poster": "assets/video/giving-tree-youtube.jpg",
+    "url": "https://www.youtube.com/watch?v=wKFw8_lxtVE"
+  },
+  {
     "id": "grow-video",
     "type": "video",
     "title": "천천히 자라도 돼",
