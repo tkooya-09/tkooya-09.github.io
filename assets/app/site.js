@@ -1,6 +1,17 @@
 
 const ITEMS = [
   {
+    "id": "life-video",
+    "type": "video",
+    "title": "인생 별거 없더라",
+    "desc": "안경 쓴 아빠와 시아 가족의 소소한 일상을 담은 가사 뮤직비디오입니다.",
+    "mark": "FAMILY",
+    "color": "amber",
+    "tag": "3:30 · 가사 뮤직비디오",
+    "poster": "assets/video/life-poster.jpg",
+    "url": "https://tkooya-09.github.io/videos/life/"
+  },
+  {
     "id": "merry-merry-christmas-video",
     "type": "video",
     "title": "메리 메리 크리스마스",
@@ -291,6 +302,8 @@ const ITEMS = [
   },
   {
     "id": "life",
+    "videoPage": "https://tkooya-09.github.io/videos/life/",
+    "poster": "assets/video/life-poster.jpg",
     "type": "music",
     "title": "인생 별거 없더라",
     "audio": "assets/music/life.mp3",
