@@ -1,6 +1,17 @@
 
 const ITEMS = [
   {
+    "id": "merry-merry-christmas-video",
+    "type": "video",
+    "title": "메리 메리 크리스마스",
+    "desc": "시아와 가족의 따뜻한 크리스마스를 담은 웹툰 뮤직비디오입니다.",
+    "mark": "MUSIC VIDEO",
+    "color": "pink",
+    "tag": "3:00 · 유튜브 영상",
+    "poster": "assets/video/merry-merry-christmas-poster.jpg",
+    "url": "https://www.youtube.com/watch?v=bqlLuy1C21M"
+  },
+  {
     "id": "giving-tree-video",
     "type": "video",
     "title": "아낌없이 주는 나무",
@@ -220,6 +231,8 @@ const ITEMS = [
   },
   {
     "id": "merry-merry-christmas",
+    "youtube": "https://www.youtube.com/watch?v=bqlLuy1C21M",
+    "poster": "assets/video/merry-merry-christmas-poster.jpg",
     "type": "music",
     "title": "메리 메리 크리스마스",
     "audio": "assets/music/merry-merry-christmas.mp3",
